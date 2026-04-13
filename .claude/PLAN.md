@@ -137,12 +137,13 @@ Build the UI foundation: Swiss Design tokens, TipTap editor, PWA setup, mobile-f
   - Acceptance: Tokens usable in Tailwind classes (`text-h1`, `p-md`, `text-gray-70`)
   - Implementation: TW4 CSS-native `@theme inline` in `globals.css` (no tailwind.config.ts)
 
-- [ ] `[ui]` TipTap editor component [M]
+- [x] `[ui]` TipTap editor component [M]
   - Add TipTap dependencies (`@tiptap/react`, `@tiptap/starter-kit`, `@tiptap/pm`)
-  - File: `packages/ui/src/editor.tsx`
+  - File: `packages/ui/src/Editor.tsx`
   - Minimal config: bold, italic, headings, lists, placeholder text
   - Styled with Swiss Design tokens (typography-first, clean)
-  - Props: `content`, `onUpdate`, `placeholder`, `className`
+  - Props: `content`, `onUpdate`, `placeholder`, `className`, `editable`
+  - No toolbar — zen editing via keyboard shortcuts only
   - Acceptance: Rich text editing works, outputs JSON, Swiss-styled
 
 - [ ] `[web]` PWA manifest + service worker [S]

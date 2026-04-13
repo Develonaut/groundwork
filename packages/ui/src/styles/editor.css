@@ -1,0 +1,143 @@
+/*
+ * Swiss Design styles for TipTap / ProseMirror content.
+ *
+ * Typography-first, monochrome, generous whitespace.
+ * No shadows, no rounded corners, no decorative elements.
+ */
+
+/* Editor container — remove ProseMirror's default outline */
+.tiptap {
+  outline: none;
+}
+
+/* --- Block elements --- */
+
+.tiptap p {
+  margin-bottom: 0.75em;
+}
+
+.tiptap p:last-child {
+  margin-bottom: 0;
+}
+
+.tiptap h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.tiptap h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+}
+
+.tiptap h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+.tiptap h1:first-child,
+.tiptap h2:first-child,
+.tiptap h3:first-child {
+  margin-top: 0;
+}
+
+/* --- Lists --- */
+
+.tiptap ul,
+.tiptap ol {
+  padding-left: 1.5em;
+  margin-bottom: 0.75em;
+}
+
+.tiptap ul {
+  list-style-type: disc;
+}
+
+.tiptap ol {
+  list-style-type: decimal;
+}
+
+.tiptap li {
+  margin-bottom: 0.25em;
+}
+
+.tiptap li p {
+  margin-bottom: 0.25em;
+}
+
+/* --- Inline styles --- */
+
+.tiptap strong {
+  font-weight: 700;
+}
+
+.tiptap em {
+  font-style: italic;
+}
+
+.tiptap code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background-color: #f3f4f6;
+  padding: 0.125em 0.25em;
+  border: 1px solid #d1d5db;
+}
+
+/* --- Code blocks --- */
+
+.tiptap pre {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  background-color: #f3f4f6;
+  border: 2px solid black;
+  padding: 1rem;
+  margin-bottom: 0.75em;
+  overflow-x: auto;
+}
+
+.tiptap pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* --- Blockquote --- */
+
+.tiptap blockquote {
+  border-left: 4px solid black;
+  padding-left: 1rem;
+  margin-left: 0;
+  margin-bottom: 0.75em;
+  color: #4b5563;
+}
+
+/* --- Horizontal rule --- */
+
+.tiptap hr {
+  border: none;
+  border-top: 2px solid black;
+  margin: 1.5em 0;
+}
+
+/* --- Placeholder --- */
+
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
