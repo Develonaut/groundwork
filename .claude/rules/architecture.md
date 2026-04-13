@@ -32,35 +32,29 @@ Groundwork uses a **layered architecture** with strict boundaries between layers
 ┌─────────────────────────────────────────────┐
 │  apps/web (Next.js 16 PWA)                  │
 │  - Journal interface                        │
-│  - Auth pages                               │
+│  - Auth pages (Sprint 2)                    │
 │  - PWA configuration                        │
 └─────────────────┬───────────────────────────┘
                   │
                   │ imports @groundwork/core, @groundwork/ui
                   ▼
 ┌─────────────────────────────────────────────┐
-│  @groundwork/core (Transport-agnostic API)         │
-│  - React hooks (useSession, useEntries)     │
-│  - TypeScript types                         │
-│  - Query layer (React Query)                │
-│  - Service layer (mutations)                │
-│  - Adapter pattern                          │
+│  @groundwork/core (Transport-agnostic API)  │
+│  - Clients (public API, own stores)         │
+│  - Hooks (reactive subscriptions)           │
+│  - Stores (Zustand + persist)               │
+│  - Services (Sprint 2+ — async writes)      │
+│  - Adapters (Sprint 2+ — Turso, NextAuth)   │
 └─────────────────┬───────────────────────────┘
                   │
-                  │ imports adapters
+                  │ MVP: Zustand persist → localStorage
+                  │ Sprint 2+: adapters → external services
                   ▼
 ┌─────────────────────────────────────────────┐
-│  Adapters                                   │
-│  - Turso (Drizzle ORM)                      │
-│  - NextAuth (Auth)                           │
-└─────────────────┬───────────────────────────┘
-                  │
-                  │ connects to external services
-                  ▼
-┌─────────────────────────────────────────────┐
-│  External Services                          │
-│  - Turso (LibSQL database)                  │
-│  - NextAuth.js (Authentication)             │
+│  Storage                                    │
+│  - localStorage (MVP via persist)           │
+│  - Turso / LibSQL (Sprint 2+)              │
+│  - NextAuth.js (Sprint 2+)                 │
 └─────────────────────────────────────────────┘
 ```
 
@@ -109,34 +103,34 @@ export default function SessionsPage() {
 ```
 packages/core/
 ├── src/
-│   ├── hooks/              # React Query hooks
-│   │   ├── use-sessions.ts
-│   │   ├── use-entries.ts
-│   │   └── use-session.ts
-│   ├── services/           # Mutation services
-│   │   ├── session-service.ts
-│   │   └── entry-service.ts
-│   ├── adapters/           # Transport adapters
-│   │   ├── turso/
-│   │   │   ├── client.ts
-│   │   │   ├── schema.ts
-│   │   │   └── queries.ts
-│   │   └── next-auth/
-│   │       └── auth.ts
-│   ├── types/              # TypeScript types
-│   │   ├── session.ts
-│   │   └── entry.ts
-│   └── index.ts            # Public API surface
+│   ├── index.ts                # Public API surface
+│   ├── core.ts                 # Imperative singleton (clients wired up)
+│   ├── reactCore.ts            # React-enhanced singleton (adds hooks)
+│   ├── clients/                # Public API — owns stores, domain methods
+│   │   └── sessionsClient.ts
+│   ├── hooks/                  # Reactive layer — subscribe to stores
+│   │   ├── useSessions.ts
+│   │   └── useCreateSession.ts
+│   ├── stores/                 # Zustand stores — state + persist
+│   │   ├── createEnhancedStore.ts
+│   │   └── sessionsStore.ts
+│   ├── services/               # Write path (Sprint 2+ — Turso)
+│   ├── adapters/               # Backend-specific (Sprint 2+ — Turso, NextAuth)
+│   └── types/                  # TypeScript types + Zod schemas
+│       └── session.ts
 ```
 
 **Dependencies:**
 
-- `@tanstack/react-query` (client state management)
-- `drizzle-orm` (type-safe SQL)
-- `@libsql/client` (Turso client)
-- `next-auth` (auth)
+- `zustand` (domain state — stores with persist middleware)
+- `immer` (ergonomic state mutations in stores)
+- `@tanstack/react-query` (server state — Sprint 2+)
+- `drizzle-orm` (type-safe SQL — Sprint 2+)
+- `@libsql/client` (Turso client — Sprint 2+)
+- `next-auth` (auth — Sprint 2+)
+- `zod` (validation)
 
-**Key Principle:** The adapter pattern allows swapping Turso for SQLite, Postgres, or any future database without changing the API contract.
+**Key Principle:** The adapter pattern allows swapping the persistence layer (localStorage → Turso → Postgres) without changing the API contract.
 
 ---
 
@@ -388,6 +382,8 @@ These rules are **enforced** and **non-negotiable**. They prevent circular depen
 
 **CAN import:**
 
+- `zustand` (stores)
+- `immer` (store middleware)
 - `@tanstack/react-query`
 - `drizzle-orm`
 - `@libsql/client`
@@ -465,79 +461,85 @@ These rules are **enforced** and **non-negotiable**. They prevent circular depen
 
 ## State Management
 
-Groundwork uses **multiple state strategies** based on the type of data.
+Groundwork uses **multiple state strategies** based on the type of data. The primary pattern is **Zustand stores** owned by `@groundwork/core` clients, following bnto's proven architecture.
 
-### Server State (React Query)
+### Domain State (Zustand Stores)
 
-**Use for:** Data from the database (sessions, entries, user profile)
+**Use for:** Domain data owned by `@groundwork/core` — sessions, auth state, user profile.
 
-**Managed by:** `@groundwork/core` hooks wrapping React Query
+**Managed by:** Zustand stores with `createEnhancedStore` (immer + optional persist middleware). Clients own their stores, hooks subscribe reactively.
 
 **Example:**
 
 ```tsx
+// Hook subscribes to store via selector
 const { data: sessions } = useSessions();
-const { data: session } = useSession(id);
-const { data: entries } = useEntries(sessionId);
+
+// Client writes to store imperatively
+core.sessions.create({ date: "2026-04-13", notes: "Worked on half guard" });
 ```
 
 **Benefits:**
 
-- Automatic caching
-- Background refetching
+- Instant reads (no async for local data)
+- Persist middleware for localStorage/sessionStorage
+- Immer for ergonomic state mutations
+- Selectors optimize re-renders
+- Vanilla stores work in tests without React
+
+**MVP:** Sessions store persisted to localStorage. The store IS the data layer.
+
+**Sprint 2+:** Stores blend with React Query — persisted state provides instant data while server queries load.
+
+### Server State (React Query — Sprint 2+)
+
+**Use for:** Async data from Turso once database is added.
+
+**Managed by:** `@groundwork/core` services returning `queryOptions` objects.
+
+**Example:**
+
+```tsx
+// Sprint 2: hooks blend store (instant) + query (live)
+const { data: sessions, isLoading } = useSessions();
+```
+
+**Benefits:**
+
+- Automatic caching and background refetching
 - Optimistic updates
 - Request deduplication
 - Stale-while-revalidate
 
-### Local UI State (useState, useReducer)
+### Local UI State (useState)
 
-**Use for:** Ephemeral UI state (modals, forms, toggles, filters)
-
-**Example:**
+**Use for:** Ephemeral UI state (modals, forms, toggles, filters).
 
 ```tsx
 const [isOpen, setIsOpen] = useState(false);
-const [filter, setFilter] = useState("all");
 ```
-
-**Benefits:**
-
-- Simple
-- Colocated with component
-- No over-engineering
 
 ### URL State (Next.js Router)
 
-**Use for:** Navigation state (active tab, search query, filters)
-
-**Example:**
+**Use for:** Navigation state (active tab, search query, filters).
 
 ```tsx
-// apps/web/app/sessions/page.tsx
 export default function SessionsPage({ searchParams }: { searchParams: { type?: "gi" | "nogi" } }) {
   const type = searchParams.type || "all";
-  // ...
 }
 ```
 
-**Benefits:**
-
-- Shareable URLs
-- Back button works
-- Deep linking
-- Bookmarkable
-
 ### State Decision Matrix
 
-| Data Type        | Strategy         | Example                 |
-| ---------------- | ---------------- | ----------------------- |
-| Database records | React Query      | Sessions, entries       |
-| Auth state       | NextAuth Session | Current user            |
-| Form inputs      | useState         | Text fields, checkboxes |
-| Modal visibility | useState         | Dialog open/closed      |
-| Active tab       | URL params       | `/sessions?type=gi`     |
-| Search/filter    | URL params       | `/sessions?q=armbar`    |
-| Pagination       | URL params       | `/sessions?page=2`      |
+| Data Type           | Strategy                | Example                 |
+| ------------------- | ----------------------- | ----------------------- |
+| Domain records      | Zustand store (persist) | Sessions, user profile  |
+| Auth state          | Zustand store (persist) | Current user, status    |
+| Server records      | React Query (Sprint 2+) | Live session data       |
+| Form inputs         | useState                | Text fields, checkboxes |
+| Modal visibility    | useState                | Dialog open/closed      |
+| Active tab / filter | URL params              | `/sessions?type=gi`     |
+| Search query        | URL params              | `/sessions?q=armbar`    |
 
 ---
 

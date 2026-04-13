@@ -1,7 +1,7 @@
 # Groundwork — Build Plan
 
-**Last Updated:** April 13, 2026  
-**Brand:** Groundwork (`groundwork.zone`)  
+**Last Updated:** April 13, 2026
+**Brand:** Groundwork (`groundwork.zone`)
 **This is the single source of truth for what's been built, what's in progress, and what's next.**
 
 ---
@@ -20,136 +20,109 @@ Tasks are organized into **sprints** (features) and **waves** (parallel work). A
 
 ## Current State
 
-**Project:** Groundwork - A zen BJJ training journal  
-**URL:** `groundwork.zone`  
-**Design:** Swiss Design (typography-first, grid-based, 60-70% whitespace)  
-**Philosophy:** KISS - Keep It Simple, Stupid  
-**Status:** Sprint 0 (Infrastructure setup)
+**Status:** Sprint 1 (MVP)
 
 **What exists:**
 
 - [x] Monorepo structure (pnpm + Turborepo)
-- [x] Design language defined (Swiss Design)
-- [x] Brand identity (Groundwork)
-- [x] Tech stack selected
-- [x] Documentation (`.claude/` dir)
+- [x] `apps/web` — Next.js 16 scaffold
+- [x] `packages/core` — types + barrel export
+- [x] `packages/ui` — cn() utility + barrel export
+- [x] Tooling — ESLint, Prettier, Lefthook, Taskfile
+- [x] Docs — architecture, rules, design language, decisions
+- [x] GitHub repo + initial commit
 
-**What's next:** Sprint 0 → Sprint 1 (MVP)
+**What's next:** Sprint 1 — ship the MVP
 
 ---
 
-## Sprint 0: Infrastructure Setup
+## Sprint 0: Infrastructure Setup — COMPLETE
 
-**Goal:** Bootstrap the monorepo. Copy infrastructure from bnto, adapt for Groundwork.
-
-**Status:** In Progress (agent working)
-
-### Wave 1 — Copy Infrastructure
-
-- [ ] Copy from bnto: `.prettierignore`, `lefthook.yml`, `eslint.config.base.mjs`
-- [ ] Copy from bnto: `.claude/rules/`, `.claude/skills/`
-- [ ] Merge `.gitignore` (bnto + existing)
-
-### Wave 2 — Adapt Docs
-
-- [ ] Update `.claude/CLAUDE.md` (@bnto → @groundwork, remove Rust/Convex, add Turso/NextAuth)
-- [ ] Update `.claude/rules/architecture.md` (3 packages: core/ui/web)
-- [ ] Update `.claude/rules/core-api.md` (Turso adapter, not Convex)
-
-### Wave 3 — Initialize Packages
-
-- [ ] `packages/core`: package.json, tsconfig, src/index.ts, drizzle.config.ts
-- [ ] `packages/ui`: package.json, tsconfig, src/index.ts, tailwind.config.ts (Swiss tokens)
-- [ ] `apps/web`: Next.js 16, update package.json with workspace deps
-
-### Wave 4 — Verify
-
-- [ ] `pnpm install` succeeds
-- [ ] `pnpm lint` runs (even if errors exist)
-- [ ] `lefthook install` works
-- [ ] Git init + first commit
+Monorepo bootstrapped, packages initialized, docs written, repo pushed.
 
 ---
 
 ## Sprint 1: MVP — The Absolute Minimum
 
-**Goal:** Ship a working journal in 2 weeks. Create session → view sessions. That's it.
+**Goal:** Ship a working journal. Create session, view sessions. That's it.
 
-**Scope:** localStorage only, no auth, no database, no markdown rendering. KISS.
+**KISS means feature simplicity, not architectural shortcuts.** The core API, store pattern, UI components, and layered architecture are built properly from the start — following bnto's proven patterns. What's simple is the _feature set_: date + notes, no auth, no database, no metadata.
 
-### Wave 1 — Core Setup (No Database Yet!)
+### Wave 1 — Core Data Layer
 
-**Decision:** Skip Turso for MVP. Use localStorage. Ship faster.
+Build `@groundwork/core` with the full client/store/service architecture. MVP adapter is a Zustand persisted store (localStorage). When Sprint 2 adds Turso, we swap the adapter — everything above stays the same.
 
-- [ ] `@groundwork/core`:
-  - [ ] Session type: `{ id, date, notes, createdAt }`
-  - [ ] Zod schema for validation
-  - [ ] localStorage adapter (setItem/getItem)
-  - [ ] React hooks: `useSessions()`, `useCreateSession()`
+- [ ] Port `createEnhancedStore` factory from bnto (Zustand + immer + persist)
+- [ ] Session types — `{ id, date, notes, createdAt }`
+- [ ] Zod schema for session validation
+- [ ] Sessions store — `createEnhancedStore` with persist middleware (localStorage)
+- [ ] Sessions client — owns store, exposes `create()`, `remove()`, `get()`, `store`
+- [ ] Sessions hooks — `useSessions()`, `useCreateSession()`
+- [ ] Wire up `core` singleton — `core.sessions` namespace
+- [ ] Tests for validation, store, client, hooks
 
 ### Wave 2 — UI Components (Swiss Design)
 
-- [ ] `@groundwork/ui`:
-  - [ ] Tailwind config with Swiss Design tokens (8px grid, monochrome palette)
-  - [ ] Typography components: `<Heading>`, `<Text>`
-  - [ ] Layout: `<Container>`, `<Stack>`
-  - [ ] Form: `<Input>`, `<Textarea>`, `<Button>`
-  - [ ] `<Card>` for session display
+Build `@groundwork/ui` components styled with Swiss Design tokens. These are shadcn/ui primitives copied in and styled.
 
-### Wave 3 — Web App (The Actual MVP)
+- [ ] Tailwind config with Swiss Design tokens (8px grid, monochrome palette, type scale)
+- [ ] `Button` component (primary/secondary variants)
+- [ ] `Input` component
+- [ ] `Textarea` component
+- [ ] `Card` component (for session display)
 
-- [ ] `apps/web`:
-  - [ ] `/app/page.tsx` - Main journal page
-  - [ ] `<SessionForm>` component (date input + textarea + save button)
-  - [ ] `<SessionList>` component (map over sessions, show cards)
-  - [ ] `<SessionCard>` component (date + truncated notes)
-  - [ ] Swiss Design layout (grid, whitespace, typography)
-  - [ ] Mobile responsive
+### Wave 3 — Journal App
 
-### Wave 4 — Polish & Ship
+Compose `@groundwork/core` + `@groundwork/ui` into the journal experience.
+
+- [ ] Journal page — session creation form (date input + textarea + save button)
+- [ ] Journal page — session list (newest first, date + truncated notes)
+- [ ] Session detail page — full notes view
+- [ ] Swiss Design layout (typography, whitespace, grid, mobile-first)
+
+### Wave 4 — Ship
 
 - [ ] Test on mobile Safari + Chrome
-- [ ] Verify sessions persist across reload
-- [ ] Clean up any console errors
-- [ ] Deploy to Vercel at `groundwork.zone`
+- [ ] Verify sessions persist across page reload
+- [ ] Deploy to Vercel
 - [ ] Get 5 people to test for 1 week
 
-**MVP Success Criteria:**
+**Success criteria:**
 
 - [ ] Can create session in < 30 seconds
-- [ ] Sessions persist
+- [ ] Sessions persist across reload
+- [ ] Works on mobile
 - [ ] Looks zen and clean
-- [ ] 5 testers use it for 1 week
 
 ---
 
 ## Sprint 2: Make It Real
 
-**Goal:** Add auth + database so it's a real product.
+**Goal:** Add auth + database. Move from persisted Zustand store to Turso backend.
 
-**Timeline:** 2-4 weeks after M1 ships
+**This is when React Query enters the picture** — async server state alongside Zustand stores. Add Turso adapter, swap persistence layer, keep the same public API.
 
 ### Wave 1 — Database
 
-- [ ] `@groundwork/core`:
-  - [ ] Drizzle schema: sessions table
-  - [ ] Turso adapter (replace localStorage)
-  - [ ] Migration: create sessions table
-  - [ ] Update hooks to use database
+- [ ] Drizzle schema: sessions table (add `userId`, `type`, `duration`)
+- [ ] Turso adapter in `@groundwork/core`
+- [ ] React Query integration — `queryOptions` in services
+- [ ] Hooks blend persisted store + live server data (like bnto's `useAuth`)
+- [ ] Tests for data layer
 
 ### Wave 2 — Auth
 
-- [ ] `apps/web`:
-  - [ ] NextAuth setup (magic link)
-  - [ ] Sign in/sign up pages
-  - [ ] Protected routes middleware
-  - [ ] Migrate localStorage sessions on first login
+- [ ] NextAuth setup (magic link, passwordless)
+- [ ] Auth adapter + auth client + auth store in `@groundwork/core`
+- [ ] Sign in / sign up pages
+- [ ] Protected routes
+- [ ] Migrate localStorage sessions to user account on first login
 
 ### Wave 3 — Enhancements
 
-- [ ] Session metadata: gi/no-gi toggle, duration field
-- [ ] Markdown rendering (simple, no WYSIWYG yet)
+- [ ] Session metadata: gi/no-gi toggle, duration
 - [ ] Export: download all sessions as JSON/Markdown
+- [ ] Basic markdown rendering in session view
 
 ### Wave 4 — Deploy
 
@@ -162,18 +135,11 @@ Tasks are organized into **sprints** (features) and **waves** (parallel work). A
 
 ## Sprint 3+: TBD
 
-**Don't plan too far ahead.** Wait for M2 user feedback.
+**Don't plan too far ahead.** Wait for Sprint 2 user feedback.
 
-**Potential features:**
+**Potential features:** Technique tags, search, dark mode, calendar view, session templates.
 
-- Technique tags
-- Search
-- Dark mode
-- Better markdown editor
-- Calendar view
-- Session templates
-
-**Decision point:** After M2 ships, survey users, pick top 2-3 requests.
+**Decision point:** After Sprint 2 ships, survey users, pick top 2-3 requests.
 
 ---
 
@@ -182,9 +148,8 @@ Tasks are organized into **sprints** (features) and **waves** (parallel work). A
 - Technique library
 - Social features
 - Instructor tools
-- Analytics/charts
+- Analytics / charts
 - Competition tracking
-- Video platform
 
 **Focus:** Journal first. Everything else is a distraction.
 
