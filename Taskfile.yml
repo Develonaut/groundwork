@@ -1,0 +1,76 @@
+version: "3"
+
+tasks:
+  # Development
+  dev:
+    desc: Start the web app in dev mode (port 5000)
+    cmds: [pnpm --filter @groundwork/web dev]
+
+  build:
+    desc: Build all packages
+    cmds: [pnpm turbo run build]
+
+  test:
+    desc: Run all tests
+    cmds: [pnpm turbo run test]
+
+  lint:
+    desc: Lint all packages
+    cmds: [pnpm turbo run lint]
+
+  format:
+    desc: Format all files with Prettier
+    cmds: [pnpm format]
+
+  format:check:
+    desc: Check formatting without changes (CI)
+    cmds: [pnpm format:check]
+
+  # Database (Turso + Drizzle)
+  db:generate:
+    desc: Generate Drizzle migration files
+    dir: ./packages/core
+    cmds: [pnpm drizzle-kit generate]
+
+  db:push:
+    desc: Push schema directly to Turso (dev only)
+    dir: ./packages/core
+    cmds: [pnpm drizzle-kit push]
+
+  db:studio:
+    desc: Open Drizzle Studio
+    dir: ./packages/core
+    cmds: [pnpm drizzle-kit studio]
+
+  db:migrate:
+    desc: Run pending migrations against Turso
+    dir: ./packages/core
+    cmds: [pnpm drizzle-kit migrate]
+
+  # Quality gate
+  check:
+    desc: Run all quality checks (build + test + lint + format)
+    cmds:
+      - echo "=== build ==="
+      - task: build
+      - echo "=== tests ==="
+      - task: test
+      - echo "=== lint ==="
+      - task: lint
+      - echo "=== format check ==="
+      - task: format:check
+      - echo "=== all checks passed ==="
+
+  # Cache management
+  clean:cache:
+    desc: Clear all build caches (Turbo, Next.js)
+    cmds:
+      - rm -rf .turbo
+      - rm -rf apps/web/.next
+      - rm -rf node_modules/.cache
+      - echo "All caches cleared"
+
+  clean:cache:prune:
+    desc: Prune Turbo cache entries older than 7 days
+    cmds:
+      - find .turbo -type f -mtime +7 -delete 2>/dev/null; find .turbo -type d -empty -delete 2>/dev/null; echo "Pruned Turbo cache (entries older than 7 days)"

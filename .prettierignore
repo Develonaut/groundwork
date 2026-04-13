@@ -1,0 +1,19 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+.next
+out
+build
+
+# Lock files
+pnpm-lock.yaml
+
+# Images and static assets
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico

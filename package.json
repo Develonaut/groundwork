@@ -1,0 +1,40 @@
+{
+  "name": "groundwork",
+  "private": true,
+  "packageManager": "pnpm@10.19.0",
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "dev": "turbo run dev",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "postinstall": "lefthook install || true",
+    "db:generate": "cd packages/core && drizzle-kit generate",
+    "db:push": "cd packages/core && drizzle-kit push",
+    "db:studio": "cd packages/core && drizzle-kit studio"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9",
+    "eslint": "^9",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-boundaries": "^6.0.1",
+    "eslint-plugin-check-file": "^3.3.1",
+    "eslint-plugin-import-x": "^4.16.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-sonarjs": "^4.0.2",
+    "eslint-plugin-unicorn": "^63.0.0",
+    "lefthook": "^1.11.0",
+    "prettier": "^3.8.1",
+    "turbo": "^2.4.4",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
+  }
+}

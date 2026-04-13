@@ -1,0 +1,46 @@
+# Lefthook configuration for Groundwork
+# Adapted from bnto. Removed Rust/WASM/theme-codegen hooks.
+
+pre-commit:
+  parallel: true
+  commands:
+    # Format check - runs first (priority 1)
+    prettier:
+      priority: 1
+      glob: "*.{ts,tsx,js,jsx,json,md,yml,yaml}"
+      run: pnpm prettier --check {staged_files}
+
+    # Lint TypeScript/JavaScript
+    lint:
+      priority: 2
+      glob: "*.{ts,tsx,js,jsx}"
+      exclude: "node_modules/|.next/"
+      run: pnpm turbo lint --filter=...[HEAD]
+
+    # Type check
+    typecheck:
+      priority: 3
+      glob: "*.{ts,tsx}"
+      exclude: "node_modules/|.next/"
+      run: pnpm turbo build --filter=...[HEAD] --dry=json
+
+    # Check for Object.assign in RSC files (React Server Components)
+    check-object-assign:
+      priority: 4
+      glob: "*.{ts,tsx}"
+      run: |
+        if git diff --cached --name-only | grep -E 'app/.*\.(ts|tsx)$' | xargs grep -n 'Object\.assign' 2>/dev/null; then
+          echo "Error: Object.assign found in RSC files. Use spread operator instead."
+          exit 1
+        fi
+
+    # Check for grab-bag utils files (Bento Box Principle enforcement)
+    check-grab-bags:
+      priority: 5
+      glob: "*.{ts,tsx}"
+      run: |
+        if git diff --cached --name-only | grep -E '(utils|helpers)\.ts$' 2>/dev/null; then
+          echo "Error: Grab-bag files (utils.ts, helpers.ts) violate Bento Box Principle."
+          echo "Create domain-specific files instead (e.g., formatDuration.ts, validateSession.ts)."
+          exit 1
+        fi

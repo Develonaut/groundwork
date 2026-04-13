@@ -1,0 +1,107 @@
+{
+  "folders": [
+    { "path": ".", "name": "root" },
+    { "path": "apps", "name": "apps" },
+    { "path": "packages", "name": "packages" },
+  ],
+  "settings": {
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": null,
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "[json]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "[markdown]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "tailwindCSS.experimental.classRegex": [
+      ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+      ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ],
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/dist": true,
+      "**/.turbo": true,
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/dist": true,
+      "**/.turbo": true,
+      "**/pnpm-lock.yaml": true,
+    },
+  },
+  "extensions": {
+    "recommendations": [
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "bradlc.vscode-tailwindcss",
+    ],
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Dev",
+        "detail": "Start Next.js dev server (port 5000)",
+        "type": "shell",
+        "command": "task dev",
+        "isBackground": true,
+        "problemMatcher": {
+          "pattern": { "regexp": ".", "file": 1, "location": 2, "message": 3 },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "Starting",
+            "endsPattern": "Ready in",
+          },
+        },
+        "group": { "kind": "build", "isDefault": true },
+        "presentation": { "group": "dev", "reveal": "always" },
+      },
+      {
+        "label": "Build",
+        "detail": "Build all packages (Turborepo)",
+        "type": "shell",
+        "command": "task build",
+        "group": "build",
+        "problemMatcher": ["$tsc"],
+      },
+      {
+        "label": "Lint",
+        "detail": "ESLint all packages",
+        "type": "shell",
+        "command": "task lint",
+        "problemMatcher": ["$eslint-stylish"],
+      },
+      {
+        "label": "Test",
+        "detail": "Run all tests",
+        "type": "shell",
+        "command": "task test",
+        "group": { "kind": "test", "isDefault": true },
+        "problemMatcher": [],
+      },
+      {
+        "label": "Check: All",
+        "detail": "Full quality gate (build + test + lint + format)",
+        "type": "shell",
+        "command": "task check",
+        "problemMatcher": ["$tsc"],
+      },
+      {
+        "label": "Format",
+        "detail": "Format all files with Prettier",
+        "type": "shell",
+        "command": "task format",
+        "problemMatcher": [],
+      },
+    ],
+  },
+}

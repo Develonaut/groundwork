@@ -1,0 +1,29 @@
+{
+  "name": "@groundwork/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "@tanstack/react-query": "catalog:",
+    "drizzle-orm": "catalog:",
+    "react": "catalog:",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "drizzle-kit": "^0.28.1",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
