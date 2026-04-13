@@ -129,11 +129,12 @@ Build `@groundwork/core` with the full client/store/hook architecture. MVP stora
 
 Build the UI foundation: Swiss Design tokens, TipTap editor, PWA setup, mobile-first shell.
 
-- [ ] `[ui]` Tailwind config with Swiss Design tokens [S]
+- [x] `[ui]` Tailwind config with Swiss Design tokens [S]
   - 8px grid spacing, monochrome palette, type scale (hero/h1/h2/h3/body/small)
   - Font already set up: Switzer (sans) + IBM Plex Mono (mono)
   - Accent color (Belt Blue #0066cc)
   - Acceptance: Tokens usable in Tailwind classes (`text-h1`, `p-md`, `text-gray-70`)
+  - Implementation: TW4 CSS-native `@theme inline` in `globals.css` (no tailwind.config.ts)
 
 - [ ] `[ui]` TipTap editor component [M]
   - Add TipTap dependencies (`@tiptap/react`, `@tiptap/starter-kit`, `@tiptap/pm`)
