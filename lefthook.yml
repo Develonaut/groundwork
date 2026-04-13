@@ -29,7 +29,8 @@ pre-commit:
       priority: 4
       glob: "*.{ts,tsx}"
       run: |
-        if git diff --cached --name-only | grep -E 'app/.*\.(ts|tsx)$' | xargs grep -n 'Object\.assign' 2>/dev/null; then
+        FILES=$(git diff --cached --name-only | grep -E 'app/.*\.(ts|tsx)$' || true)
+        if [ -n "$FILES" ] && echo "$FILES" | xargs grep -n 'Object\.assign' 2>/dev/null; then
           echo "Error: Object.assign found in RSC files. Use spread operator instead."
           exit 1
         fi
