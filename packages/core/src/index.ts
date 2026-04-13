@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * @groundwork/core — Transport-agnostic API layer for Groundwork.
  *
@@ -5,4 +7,12 @@
  * Never import from database adapters directly.
  */
 
-export type { Session, SessionInput } from "./types/session";
+// Core singleton (imperative + React hooks merged)
+export { core } from "./reactCore";
+
+// Types
+export type { Entry } from "./types/entry";
+export { entrySchema } from "./types/entry";
+
+// Store factories (for app-layer orchestration)
+export { createEnhancedStore } from "./stores/createEnhancedStore";

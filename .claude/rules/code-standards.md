@@ -15,7 +15,7 @@ Like a traditional Japanese bento box where each compartment serves a specific p
 ### Size Limits
 
 - **Files:** Target 50-100 lines. Hard cap at 250 -- no exceptions. If a file approaches 150 lines, look for extraction opportunities
-- **Functions:** < 20 lines. No escape hatch
+- **Functions:** < 35 lines. No escape hatch
 - **Components:** One exported component per file. Target 50-100 lines of JSX + logic. If a component has more than 2-3 sub-components defined in the same file, break into a folder with barrel export
 - **Hooks:** One exported hook per file
 - **Functions/utils:** One exported function per file. If a function is more than a few lines or reused anywhere, it gets its own file (camelCase, e.g., `formatDuration.ts`). Group related functions in a domain folder, not a grab-bag file

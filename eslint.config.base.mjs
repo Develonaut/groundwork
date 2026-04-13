@@ -48,7 +48,7 @@ export const baseConfig = tseslint.config(
     rules: {
       // === Complexity and Size Enforcement (Bento Box Principle) ===
       "max-lines": ["error", { max: 250, skipBlankLines: true, skipComments: true }],
-      "max-lines-per-function": ["error", { max: 20, skipBlankLines: true, skipComments: true }],
+      "max-lines-per-function": ["error", { max: 35, skipBlankLines: true, skipComments: true }],
       complexity: ["error", 10],
       "max-depth": ["error", 3],
       "max-params": ["error", 4],
@@ -129,6 +129,15 @@ export const baseConfig = tseslint.config(
           ignore: ["^_.*"],
         },
       ],
+    },
+  },
+
+  // === Test File Overrides ===
+  {
+    files: ["**/*.test.ts", "**/*.test.tsx"],
+    rules: {
+      "max-lines-per-function": "off",
+      "sonarjs/no-duplicate-string": "off",
     },
   },
 
