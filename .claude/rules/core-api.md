@@ -51,19 +51,19 @@
 
 Groundwork starts with 1 domain for MVP and grows to 3:
 
-| Domain          | Sprint | Responsibility             | Key Methods                                     |
-| --------------- | ------ | -------------------------- | ----------------------------------------------- |
-| `core.sessions` | MVP    | Journal sessions (CRUD)    | `store`, `create()`, `remove()`, `get()`        |
-| `core.user`     | 2      | User profile & preferences | `meQueryOptions()`, `update()`                  |
-| `core.auth`     | 2      | Auth state & actions       | `store`, `useIsAuthenticated()`, `useSignOut()` |
+| Domain         | Sprint | Responsibility             | Key Methods                                                 |
+| -------------- | ------ | -------------------------- | ----------------------------------------------------------- |
+| `core.entries` | MVP    | Daily journal entries      | `store`, `getOrCreate(date)`, `update()`, `get()`, `list()` |
+| `core.user`    | 2      | User profile & preferences | `meQueryOptions()`, `update()`                              |
+| `core.auth`    | 2      | Auth state & actions       | `store`, `useIsAuthenticated()`, `useSignOut()`             |
 
 **Usage:**
 
 ```tsx
 import { core } from "@groundwork/core";
 
-function SessionList() {
-  const sessions = useSessions(); // hook subscribes to core.sessions.store
+function TodayPage() {
+  const entry = useEntry(today()); // hook subscribes to core.entries.store
   // ...
 }
 ```
@@ -121,43 +121,43 @@ export function createEnhancedStore<T>(options?: EnhancedStoreOptions) {
 }
 ```
 
-**Example — Sessions Store (MVP):**
+**Example — Entries Store (MVP):**
 
 ```ts
-// packages/core/src/stores/sessionsStore.ts
+// packages/core/src/stores/entriesStore.ts
 import { createEnhancedStore } from "./createEnhancedStore";
-import type { Session } from "../types/session";
+import type { Entry } from "../types/entry";
 
-type SessionsStoreState = {
-  sessions: Record<string, Session>;
-  upsert: (session: Session) => void;
-  remove: (id: string) => void;
+type EntriesStoreState = {
+  entries: Record<string, Entry>; // keyed by date (YYYY-MM-DD)
+  upsert: (entry: Entry) => void;
+  remove: (date: string) => void;
 };
 
-export const sessionsStore = createEnhancedStore<SessionsStoreState>({
+export const entriesStore = createEnhancedStore<EntriesStoreState>({
   persist: {
-    name: "groundwork-sessions",
-    partialize: (state) => ({ sessions: state.sessions }),
+    name: "groundwork-entries",
+    partialize: (state) => ({ entries: state.entries }),
   },
 })((set) => ({
-  sessions: {},
+  entries: {},
 
-  upsert: (session) =>
+  upsert: (entry) =>
     set((state) => {
-      state.sessions[session.id] = session; // immer draft mutation
+      state.entries[entry.date] = entry; // immer draft mutation
     }),
 
-  remove: (id) =>
+  remove: (date) =>
     set((state) => {
-      delete state.sessions[id];
+      delete state.entries[date];
     }),
 }));
 ```
 
 **Key design:**
 
-- `Record<string, Session>` for O(1) lookup by ID
-- `partialize` ensures only sessions are persisted (not ephemeral UI state)
+- `Record<string, Entry>` keyed by date (YYYY-MM-DD) for O(1) lookup
+- `partialize` ensures only entries are persisted (not ephemeral UI state)
 - Immer syntax — mutate draft state directly, no spread boilerplate
 - Vanilla Zustand store — no React dependency, testable with plain objects
 
@@ -178,33 +178,49 @@ Clients are the **only public API**. They own their stores and provide domain-sp
 - Never import other clients
 - Use factory functions, not classes
 
-**Example — Sessions Client (MVP):**
+**Example — Entries Client (MVP):**
 
 ```ts
-// packages/core/src/clients/sessionsClient.ts
-import { sessionsStore } from "../stores/sessionsStore";
-import { sessionSchema } from "../types/session";
+// packages/core/src/clients/entriesClient.ts
+import { entriesStore } from "../stores/entriesStore";
+import { entrySchema } from "../types/entry";
 
-export function createSessionsClient() {
+export function createEntriesClient() {
   return {
-    store: sessionsStore,
+    store: entriesStore,
 
-    create: (input: { date: string; notes: string }) => {
-      const session = sessionSchema.parse({
-        ...input,
+    getOrCreate: (date: string) => {
+      const existing = entriesStore.getState().entries[date];
+      if (existing) return existing;
+
+      const entry = entrySchema.parse({
         id: crypto.randomUUID(),
+        date,
+        focus: "",
+        content: "",
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
-      sessionsStore.getState().upsert(session);
-      return session;
+      entriesStore.getState().upsert(entry);
+      return entry;
     },
 
-    remove: (id: string) => {
-      sessionsStore.getState().remove(id);
+    update: (date: string, data: { focus?: string; content?: string }) => {
+      const entry = entriesStore.getState().entries[date];
+      if (!entry) return null;
+      const updated = { ...entry, ...data, updatedAt: new Date().toISOString() };
+      entriesStore.getState().upsert(updated);
+      return updated;
     },
 
-    get: (id: string) => {
-      return sessionsStore.getState().sessions[id] ?? null;
+    get: (date: string) => {
+      return entriesStore.getState().entries[date] ?? null;
+    },
+
+    list: () => {
+      return Object.values(entriesStore.getState().entries).sort((a, b) =>
+        b.date.localeCompare(a.date),
+      );
     },
   } as const;
 }
@@ -212,7 +228,8 @@ export function createSessionsClient() {
 
 **Key pattern:**
 
-- Client wraps store with domain logic (validation, ID generation)
+- Client wraps store with domain logic (validation, auto-create)
+- `getOrCreate` — today's entry always exists, no explicit "create" step
 - `store` exposed for hooks to subscribe reactively
 - Imperative reads via `getState()` for non-reactive access
 - Factory function returns `as const` — no classes, no `this`
@@ -232,46 +249,57 @@ Hooks subscribe to stores and provide reactive state to React components.
 - Return React Query-like interface `{ data, isLoading }` for consistency
 - Transformations (sort, filter) happen in the hook via `useMemo`
 
-**Example — useSessions:**
+**Example — useEntry:**
 
 ```ts
-// packages/core/src/hooks/useSessions.ts
+// packages/core/src/hooks/useEntry.ts
+import { useStore } from "zustand";
+import { entriesStore } from "../stores/entriesStore";
+
+export function useEntry(date: string) {
+  const entry = useStore(entriesStore, (s) => s.entries[date] ?? null);
+  return { data: entry, isLoading: false };
+}
+```
+
+**Example — useEntries:**
+
+```ts
+// packages/core/src/hooks/useEntries.ts
 import { useStore } from "zustand";
 import { useMemo } from "react";
-import { sessionsStore } from "../stores/sessionsStore";
+import { entriesStore } from "../stores/entriesStore";
 
-export function useSessions() {
-  const sessions = useStore(sessionsStore, (s) => s.sessions);
+export function useEntries() {
+  const entries = useStore(entriesStore, (s) => s.entries);
 
   const data = useMemo(
-    () =>
-      Object.values(sessions).sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      ),
-    [sessions],
+    () => Object.values(entries).sort((a, b) => b.date.localeCompare(a.date)),
+    [entries],
   );
 
   return { data, isLoading: false };
 }
 ```
 
-**Example — useCreateSession:**
+**Example — useUpdateEntry:**
 
 ```ts
-// packages/core/src/hooks/useCreateSession.ts
+// packages/core/src/hooks/useUpdateEntry.ts
 import { useCallback } from "react";
-import type { core } from "../index";
+import { core } from "../reactCore";
 
-export function useCreateSession() {
-  return useCallback((input: { date: string; notes: string }) => {
-    return core.sessions.create(input);
+export function useUpdateEntry() {
+  return useCallback((date: string, data: { focus?: string; content?: string }) => {
+    return core.entries.update(date, data);
   }, []);
 }
 ```
 
 **Key pattern:**
 
-- `useSessions()` subscribes to the store, sorts by date, returns `{ data, isLoading }`
+- `useEntry(date)` subscribes to a single entry by date
+- `useEntries()` subscribes to all entries, sorted newest first, returns `{ data, isLoading }`
 - `isLoading: false` for MVP (localStorage is sync). Sprint 2 adds real loading states
 - The hook interface stays the same when we add React Query — consumers don't change
 
@@ -363,11 +391,11 @@ Following bnto's pattern: `core.ts` creates the imperative singleton, `reactCore
 
 ```ts
 // packages/core/src/core.ts
-import { createSessionsClient } from "./clients/sessionsClient";
+import { createEntriesClient } from "./clients/entriesClient";
 
 function createCore() {
   return {
-    sessions: createSessionsClient(),
+    entries: createEntriesClient(),
   };
 }
 
@@ -378,15 +406,17 @@ export const core = createCore();
 ```ts
 // packages/core/src/reactCore.ts
 import { core as imperativeCore } from "./core";
-import { useSessions } from "./hooks/useSessions";
-import { useCreateSession } from "./hooks/useCreateSession";
+import { useEntry } from "./hooks/useEntry";
+import { useEntries } from "./hooks/useEntries";
+import { useUpdateEntry } from "./hooks/useUpdateEntry";
 
 export const core = {
   ...imperativeCore,
-  sessions: {
-    ...imperativeCore.sessions,
-    useSessions,
-    useCreateSession,
+  entries: {
+    ...imperativeCore.entries,
+    useEntry,
+    useEntries,
+    useUpdateEntry,
   },
 };
 ```
@@ -395,7 +425,7 @@ export const core = {
 // packages/core/src/index.ts
 export { core } from "./reactCore";
 export { createEnhancedStore } from "./stores/createEnhancedStore";
-export type { Session, SessionInput } from "./types/session";
+export type { Entry } from "./types/entry";
 ```
 
 ---
@@ -485,15 +515,16 @@ packages/core/src/
 ├── core.ts                     # Imperative singleton (clients wired up)
 ├── reactCore.ts                # React-enhanced singleton (adds hooks)
 ├── clients/
-│   └── sessionsClient.ts       # Sessions client (owns store)
+│   └── entriesClient.ts        # Entries client (owns store)
 ├── hooks/
-│   ├── useSessions.ts          # Reactive session list
-│   └── useCreateSession.ts     # Session creation
+│   ├── useEntry.ts             # Reactive single entry by date
+│   ├── useEntries.ts           # Reactive entry list
+│   └── useUpdateEntry.ts       # Entry update
 ├── stores/
 │   ├── createEnhancedStore.ts  # Factory: zustand + immer + persist
-│   └── sessionsStore.ts        # Sessions state + localStorage persist
+│   └── entriesStore.ts         # Entries state + localStorage persist
 └── types/
-    └── session.ts              # Session type + Zod schema
+    └── entry.ts                # Entry type + Zod schema
 ```
 
 ### Sprint 2+ (with Turso, Auth)
@@ -504,20 +535,21 @@ packages/core/src/
 ├── core.ts
 ├── reactCore.ts
 ├── clients/
-│   ├── sessionsClient.ts
+│   ├── entriesClient.ts
 │   ├── userClient.ts
 │   └── authClient.ts
 ├── hooks/
-│   ├── useSessions.ts
-│   ├── useCreateSession.ts
+│   ├── useEntry.ts
+│   ├── useEntries.ts
+│   ├── useUpdateEntry.ts
 │   ├── useAuth.ts
 │   └── useCurrentUser.ts
 ├── stores/
 │   ├── createEnhancedStore.ts
-│   ├── sessionsStore.ts
+│   ├── entriesStore.ts
 │   └── authStore.ts
 ├── services/
-│   ├── sessionsService.ts
+│   ├── entriesService.ts
 │   └── userService.ts
 ├── adapters/
 │   ├── turso.ts
@@ -525,7 +557,7 @@ packages/core/src/
 ├── db/
 │   └── schema.ts
 └── types/
-    ├── session.ts
+    ├── entry.ts
     └── user.ts
 ```
 
@@ -545,17 +577,23 @@ The architecture is designed so the **public API stays the same** as the backend
 
 **The hooks return `{ data, isLoading }` in both cases.** Components never know the difference.
 
+**The domain shifts but the pattern holds:**
+
+- MVP: `core.entries.getOrCreate(today)` → Zustand store → localStorage
+- Sprint 2: `core.entries.getOrCreate(today)` → Zustand store + React Query → Turso
+
 ---
 
 ## Summary
 
 1. **Layered singleton:** clients → stores/services → adapters
-2. **Factory functions:** `createSessionsClient()`, `createEnhancedStore()` — not classes
+2. **Factory functions:** `createEntriesClient()`, `createEnhancedStore()` — not classes
 3. **Stores are first-class:** Zustand + immer + persist. Clients own their stores
 4. **Hooks consume stores:** `useStore(store, selector)` for reactive subscriptions
 5. **Dependency rules:** Services never import services. Clients never import clients
 6. **No leakage:** No "zustand", "turso", "drizzle" in public API
 7. **MVP → Production:** Same public API, swap the persistence layer
 8. **File structure:** Clear separation of clients/hooks/stores/services/adapters
+9. **Day-based model:** One entry per day, `getOrCreate(date)` — no explicit "create" step
 
 **Golden Rule:** If the app imports anything other than `@groundwork/core`, you've violated the architecture.
