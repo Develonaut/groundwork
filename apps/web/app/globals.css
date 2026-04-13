@@ -1,57 +1,15 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* ── Typography ─────────────────────────────────────────────── */
-
-  /* Font families (runtime CSS vars from next/font) */
   --font-sans: var(--font-switzer);
   --font-mono: var(--font-ibm-plex-mono);
-
-  /* Type scale — Swiss Design */
-  --text-hero: 4rem;
-  --text-hero--line-height: 1.2;
-  --text-h1: 3rem;
-  --text-h1--line-height: 1.2;
-  --text-h2: 2.25rem;
-  --text-h2--line-height: 1.2;
-  --text-h3: 1.5rem;
-  --text-h3--line-height: 1.3;
-  --text-body: 1.125rem;
-  --text-body--line-height: 1.5;
-  --text-small: 0.875rem;
-  --text-small--line-height: 1.5;
-
-  /* ── Colors ─────────────────────────────────────────────────── */
-
-  /* Semantic aliases (shadcn/ui convention) */
-  --color-background: #ffffff;
-  --color-foreground: #000000;
-
-  /* Monochrome palette — 95% of the app */
-  --color-gray-10: #e6e6e6;
-  --color-gray-30: #b3b3b3;
-  --color-gray-50: #808080;
-  --color-gray-70: #4a4a4a;
-  --color-gray-90: #1a1a1a;
-
-  /* Accent: Belt Blue — 5% of the app, interactive elements only */
   --color-accent: #0066cc;
   --color-accent-hover: #004c99;
   --color-accent-active: #003366;
-
-  /* ── Spacing — 8px baseline grid ────────────────────────────── */
-
-  --spacing-xs: 0.5rem;
-  --spacing-sm: 1rem;
-  --spacing-md: 1.5rem;
-  --spacing-lg: 2rem;
-  --spacing-xl: 3rem;
-  --spacing-2xl: 4rem;
-  --spacing-3xl: 6rem;
 }
 
 body {
-  background: #ffffff;
-  color: #000000;
+  background: white;
+  color: black;
   font-family: var(--font-switzer), sans-serif;
 }
