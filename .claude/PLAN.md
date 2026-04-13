@@ -34,6 +34,11 @@ Tasks are organized into **sprints** and **waves** (ordered phases). All tasks i
 - [x] Tooling — ESLint, Prettier, Lefthook, Taskfile
 - [x] Docs — architecture, rules, design language, decisions
 - [x] GitHub repo + initial commit
+- [x] Typography: Switzer (sans, self-hosted variable) + IBM Plex Mono (Google Fonts)
+  - Replaced default Geist fonts with Swiss Design-appropriate typefaces
+  - `next/font/local` for Switzer, `next/font/google` for IBM Plex Mono
+  - CSS variables wired: `--font-switzer` → `--font-sans`, `--font-ibm-plex-mono` → `--font-mono`
+  - Metadata updated: title "Groundwork", description set
 
 ---
 
@@ -126,7 +131,8 @@ Build the UI foundation: Swiss Design tokens, TipTap editor, PWA setup, mobile-f
 
 - [ ] `[ui]` Tailwind config with Swiss Design tokens [S]
   - 8px grid spacing, monochrome palette, type scale (hero/h1/h2/h3/body/small)
-  - System font stack, accent color (Belt Blue #0066cc)
+  - Font already set up: Switzer (sans) + IBM Plex Mono (mono)
+  - Accent color (Belt Blue #0066cc)
   - Acceptance: Tokens usable in Tailwind classes (`text-h1`, `p-md`, `text-gray-70`)
 
 - [ ] `[ui]` TipTap editor component [M]
@@ -144,8 +150,9 @@ Build the UI foundation: Swiss Design tokens, TipTap editor, PWA setup, mobile-f
 
 - [ ] `[web]` Mobile-first app shell + layout [S]
   - Replace default Next.js template with Groundwork layout
-  - System font stack, full-height, no chrome, zen aesthetic
-  - Metadata: title, description, viewport, theme-color
+  - Fonts + metadata already done (Switzer + IBM Plex Mono, title/description set)
+  - Full-height, no chrome, zen aesthetic
+  - Remaining: viewport, theme-color, PWA meta tags, navigation shell
   - Acceptance: Clean shell, mobile-first, Swiss Design feel
 
 ---
