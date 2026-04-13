@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { resolve } from "node:path";
+import { withSerwist } from "@serwist/turbopack";
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -7,4 +8,4 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@groundwork/core", "@groundwork/ui"],
 };
 
-export default nextConfig;
+export default withSerwist(nextConfig);

@@ -45,5 +45,9 @@ pnpm-debug.log*
 .vscode/
 .idea/
 
+# Serwist service worker (generated)
+public/sw*
+public/swe-worker*
+
 # Claude Code worktrees
 .claude/worktrees/
