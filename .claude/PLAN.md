@@ -146,16 +146,19 @@ Build the UI foundation: Swiss Design tokens, TipTap editor, PWA setup, mobile-f
   - No toolbar — zen editing via keyboard shortcuts only
   - Acceptance: Rich text editing works, outputs JSON, Swiss-styled
 
-- [ ] `[web]` PWA manifest + service worker [S]
-  - `apps/web/public/manifest.json` — app name, icons, theme color, display: standalone
-  - Service worker for offline (next-pwa or manual)
+- [x] `[web]` PWA manifest + service worker [S]
+  - `apps/web/app/manifest.ts` — app name, icons, theme color, display: standalone
+  - Service worker via Serwist (`sw.ts`, `serwist-provider.tsx`, route handler)
+  - SVG icons (192x192, 512x512, maskable)
   - Acceptance: App installable on mobile, works offline
 
-- [ ] `[web]` Mobile-first app shell + layout [S]
-  - Replace default Next.js template with Groundwork layout
+- [x] `[web]` Mobile-first app shell + layout [S]
+  - Replaced default Next.js boilerplate with Groundwork landing
   - Fonts + metadata already done (Switzer + IBM Plex Mono, title/description set)
   - Full-height, no chrome, zen aesthetic
-  - Remaining: viewport, theme-color, PWA meta tags, navigation shell
+  - Sticky header with branding (nav-ready for Wave 3)
+  - Swiss Design: flush left, bold type, generous whitespace, monochrome
+  - Removed boilerplate assets (next.svg, vercel.svg, etc.)
   - Acceptance: Clean shell, mobile-first, Swiss Design feel
 
 ---
